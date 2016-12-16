@@ -4,15 +4,36 @@
 (function (module) {
   'use strict';
 
-  function StatesService($q, httpService, i18nService) {
+  function StatesService($q, httpService, i18nService, API_KEY, API_IMAGES_URL) {
     var service = this;
 
     service.search = function(query) {
-      return $q.resolve([{ title: 'BTTF2', id: 1 }]);
+      return httpService.get('/3/search/movie', {
+        language: i18nService.getLocale(),
+        api_key: API_KEY,
+        query: query
+      }).then(function(data) {
+        return data.results;
+      });
     };
 
     service.getMovie = function(id) {
-      return $q.resolve({ title:'BTTF2', id: id });
+      return httpService.get('/3/movie/' + id, {
+        language: i18nService.getLocale(),
+        api_key: API_KEY
+      });
+    };
+
+    service.discoverMovie = function() {
+      return httpService.get('/3/discover/movie', {
+        'release_date.lte': moment().add(3, 'months').format('YYYY-MM-DD'),
+        'release_date.gte': moment().format('YYYY-MM-DD'),
+        language: i18nService.getLocale(),
+        api_key: API_KEY,
+        query: query
+      }).then(function(data) {
+        return _.sample(data.results) || $q.reject();
+      });
     };
 
     /**
@@ -31,6 +52,8 @@
     '$q',
     'httpService',
     'i18nService',
+    'API_KEY',
+    'API_IMAGES_URL',
     StatesService
   ]);
 
